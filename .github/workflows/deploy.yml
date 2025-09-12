@@ -3,10 +3,10 @@ on :
   push :
     path :
       - '.github/workflows/**'
-      - 'src/**'
-      - 'build.gradle.kts'
-      - 'settings.gradle.kts'
-      - 'Dockerfile'
+      - 'backend/src/**'
+      - 'backend/build.gradle.kts'
+      - 'backendsettings.gradle.kts'
+      - 'backend/Dockerfile'
     branches:
       - main
 jobs :
