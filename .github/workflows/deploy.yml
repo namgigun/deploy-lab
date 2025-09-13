@@ -81,7 +81,7 @@ jobs :
           # EC2 인스턴스 아이디
           instance-ids: "i-01d55a52f4c8cf98a"
           working-directory: /
-          comment: deploy
+          comment: Deploy
           command: |
             docker pull ghcr.io/namgigun/app20250314:latest
             docker stop app1 2>/dev/null
