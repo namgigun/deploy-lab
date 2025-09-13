@@ -80,7 +80,10 @@ jobs :
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           instance-ids: "i-0059fe2d52c5f0094"
           working-directory: /
-          comment: deploy
+          comment: Deploy
           command: |
-            docker pull ghcr.io/${{ env.OWNER_LC }}/app20250314:latest
-            docker run -d --name app1 -p 8080:8080 ghcr.io/${{ env.OWNER_LC }}/app20250314:latest
+            docker pull ghcr.io/namgigun/app20250314:latest
+            docker stop app1 2>/dev/null
+            docker rm app1 2>/dev/null
+            docker run -d --name app1 -p 8080:8080 ghcr.io/namgigun/app20250314:latest
+            docker rmi $(docker images -f "dangling=true" -q)
