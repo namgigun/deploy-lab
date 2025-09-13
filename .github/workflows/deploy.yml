@@ -83,5 +83,5 @@ jobs :
           comment: deploy
           command: |
             bash -c "
-              echo "OHIO"
+              sudo echo "OHIO"
             "
