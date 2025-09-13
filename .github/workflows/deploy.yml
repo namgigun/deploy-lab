@@ -82,6 +82,8 @@ jobs :
           working-directory: /
           comment: deploy
           command: |
-            bash -c "
-              sudo echo "OHIO"
-            "
+            sudo docker pull ghcr.io/${{ env.OWNER_LC }}/app20250314:latest
+            sudo docker stop app1 2>/dev/null
+            sudo docker rm app1 2>/dev/null
+            sudo docker run -d --name app1 -p 8080:8080 ghcr.io/${{ env.OWNER_LC }}/app20250314:latest
+            sudo docker rmi $(docker images -f "dangling=true" -q)
