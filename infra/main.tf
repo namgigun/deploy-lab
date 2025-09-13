@@ -17,24 +17,18 @@ provider "aws" {
 resource "aws_vpc" "vpc_1" {
   cidr_block = "10.0.0.0/16"
 
-  // DNS 지원을 활성화
-  enable_dns_support = true
-  // DNS 호스트 이름 지정을 활성화
+  enable_dns_support   = true
   enable_dns_hostnames = true
 
-  // 리소스에 대한 태그를 설정
   tags = {
     Name = "${var.prefix}-vpc-1"
   }
 }
 
 resource "aws_subnet" "subnet_1" {
-  vpc_id = aws_vpc.vpc_1.id
-
-  cidr_block = "10.0.1.0/24"
-
-  availability_zone = "${var.region}a"
-
+  vpc_id                  = aws_vpc.vpc_1.id
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = "${var.region}a"
   map_public_ip_on_launch = true
 
   tags = {
@@ -43,13 +37,11 @@ resource "aws_subnet" "subnet_1" {
 }
 
 resource "aws_subnet" "subnet_2" {
-  vpc_id = aws_vpc.vpc_1.id
-
-  cidr_block = "10.0.2.0/24"
-  availability_zone = "${var.region}b"
+  vpc_id                  = aws_vpc.vpc_1.id
+  cidr_block              = "10.0.2.0/24"
+  availability_zone       = "${var.region}b"
   map_public_ip_on_launch = true
 
-  // 리소스에 대한 태그를 설정
   tags = {
     Name = "${var.prefix}-subnet-2"
   }
@@ -69,54 +61,49 @@ resource "aws_subnet" "subnet_3" {
 resource "aws_internet_gateway" "igw_1" {
   vpc_id = aws_vpc.vpc_1.id
 
-  // 리소스에 대한 태그를 설정
   tags = {
     Name = "${var.prefix}-igw-1"
   }
 }
 
 resource "aws_route_table" "rt_1" {
-    vpc_id = aws_vpc.vpc_1.id
+  vpc_id = aws_vpc.vpc_1.id
 
-    route {
-      cidr_block = "0.0.0.0/0"
-      gateway_id = aws_internet_gateway.igw_1.id
-    }
+  route {
+    cidr_block = "0.0.0.0/0"
+    gateway_id = aws_internet_gateway.igw_1.id
+  }
 
-    // 리소스에 대한 태그를 설정
-    tags = {
-      Name = "${var.prefix}-rt-1"
-    }
+  tags = {
+    Name = "${var.prefix}-rt-1"
+  }
 }
 
-// 라우트 테이블 'rt_1'과 서브넷들을 연결하는 코드
-
 resource "aws_route_table_association" "association_1" {
-    subnet_id = aws_subnet.subnet_1.id
-
-    route_table_id = aws_route_table.rt_1.id
+  subnet_id      = aws_subnet.subnet_1.id
+  route_table_id = aws_route_table.rt_1.id
 }
 
 resource "aws_route_table_association" "association_2" {
+  subnet_id      = aws_subnet.subnet_2.id
+  route_table_id = aws_route_table.rt_1.id
+}
 
-  subnet_id = aws_subnet.subnet_2.id
-  
+resource "aws_route_table_association" "association_3" {
+  subnet_id      = aws_subnet.subnet_3.id
   route_table_id = aws_route_table.rt_1.id
 }
 
 resource "aws_security_group" "sg_1" {
   name = "${var.prefix}-sg-1"
-  
-  // 인바운드 트래픽 규칙 생성
-  // 모든 것(프로토콜, 포트)을 허용
+
   ingress {
     from_port = 0
-    to_port = 0
-    protocol = "all"
+    to_port   = 0
+    protocol  = "all"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # 인바운드 트래픽 규칙 생성
   egress {
     from_port = 0
     to_port   = 0
@@ -132,10 +119,13 @@ resource "aws_security_group" "sg_1" {
 }
 
 # EC2 설정 시작
-resource "aws_iam_role" "ec2_role_1" {
-  name = "${var.prefix}-ec2_role_1"
 
-   assume_role_policy = <<EOF
+# EC2 역할 생성
+resource "aws_iam_role" "ec2_role_1" {
+  name = "${var.prefix}-ec2-role-1"
+
+  # 이 역할에 대한 신뢰 정책 설정. EC2 서비스가 이 역할을 가정할 수 있도록 설정
+  assume_role_policy = <<EOF
   {
     "Version": "2012-10-17",
     "Statement": [
@@ -152,16 +142,19 @@ resource "aws_iam_role" "ec2_role_1" {
   EOF
 }
 
+# EC2 역할에 AmazonS3FullAccess 정책을 부착
 resource "aws_iam_role_policy_attachment" "s3_full_access" {
-  role = aws_iam_role.ec2_role_1.name
+  role       = aws_iam_role.ec2_role_1.name
   policy_arn = "arn:aws:iam::aws:policy/AmazonS3FullAccess"
 }
 
+# EC2 역할에 AmazonEC2RoleforSSM 정책을 부착
 resource "aws_iam_role_policy_attachment" "ec2_ssm" {
   role       = aws_iam_role.ec2_role_1.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonEC2RoleforSSM"
 }
 
+# IAM 인스턴스 프로파일 생성
 resource "aws_iam_instance_profile" "instance_profile_1" {
   name = "${var.prefix}-instance-profile-1"
   role = aws_iam_role.ec2_role_1.name
@@ -169,34 +162,32 @@ resource "aws_iam_instance_profile" "instance_profile_1" {
 
 locals {
   ec2_user_data_base = <<-END_OF_FILE
-  #!/bin/bash
-  yum install docker -y
-  systemctl enable docker
-  systemctl start docker
+#!/bin/bash
+yum install docker -y
+systemctl enable docker
+systemctl start docker
 
-  yum install git -y
+yum install git -y
 
-  sudo dd if=/dev/zero of=/swapfile bs=128M count=32
-  sudo chmod 600 /swapfile
-  sudo mkswap /swapfile
-  sudo swapon /swapfile
-  sudo sh -c 'echo "/swapfile swap swap defaults 0 0" >> /etc/fstab'
+sudo dd if=/dev/zero of=/swapfile bs=128M count=32
+sudo chmod 600 /swapfile
+sudo mkswap /swapfile
+sudo swapon /swapfile
+sudo sh -c 'echo "/swapfile swap swap defaults 0 0" >> /etc/fstab'
 
-  END_OF_FILE
+END_OF_FILE
 }
 
+# EC2 인스턴스 생성
 resource "aws_instance" "ec2_1" {
-   ami = "ami-062cddb9d94dcf95d"
-
+  # 사용할 AMI ID
+  ami = "ami-062cddb9d94dcf95d"
   # EC2 인스턴스 유형
   instance_type = "t3.micro"
-
   # 사용할 서브넷 ID
   subnet_id = aws_subnet.subnet_2.id
-
   # 적용할 보안 그룹 ID
   vpc_security_group_ids = [aws_security_group.sg_1.id]
-
   # 퍼블릭 IP 연결 설정
   associate_public_ip_address = true
 
@@ -211,15 +202,15 @@ resource "aws_instance" "ec2_1" {
   # 루트 볼륨 설정
   root_block_device {
     volume_type = "gp3"
-    volume_size = 12
+    volume_size = 12 # 볼륨 크기를 12GB로 설정
   }
 
   user_data = <<-EOF
-  ${local.ec2_user_data_base}
-  EOF
+${local.ec2_user_data_base}
+EOF
 }
 
-
+# EC2 인스턴스 생성
 resource "aws_instance" "ec2_2" {
   # 사용할 AMI ID
   ami = "ami-062cddb9d94dcf95d"
@@ -243,10 +234,10 @@ resource "aws_instance" "ec2_2" {
   # 루트 볼륨 설정
   root_block_device {
     volume_type = "gp3"
-    volume_size = 12
+    volume_size = 12 # 볼륨 크기를 12GB로 설정
   }
 
   user_data = <<-EOF
-  ${local.ec2_user_data_base}
-  EOF
+${local.ec2_user_data_base}
+EOF
 }
