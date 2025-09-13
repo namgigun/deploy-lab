@@ -78,9 +78,9 @@ jobs :
           aws-region: ${{ secrets.AWS_REGION }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          instance-ids: "i-08d6b57ebd0a8aaf7"
+          instance-ids: "i-08d6b57ebd0a8aaf1"
           working-directory: /
-          comment: Deploy
+          comment: deploy
           command: |
             docker pull ghcr.io/namgigun/app20250314:latest
             docker stop app1 2>/dev/null
