@@ -15,7 +15,7 @@ jobs :
     outputs :
       tag_name : ${{ steps.create_tag.outputs.new_tag }}
     steps :
-      - uses : actions/checkout@v4
+      - uses : actions/checkout@v4d
       - name : Create Tag
         id : create_tag
         uses : mathieudutour/github-tag-action@v6.2
@@ -78,7 +78,7 @@ jobs :
           aws-region: ${{ secrets.AWS_REGION }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          instance-ids: "i-0eba3b84423d32c00"
+          instance-ids: "i-0bd409b11948741cf"
           working-directory: /
           comment: Deploy
           command: |
