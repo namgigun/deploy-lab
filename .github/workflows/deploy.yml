@@ -15,7 +15,7 @@ jobs :
     outputs :
       tag_name : ${{ steps.create_tag.outputs.new_tag }}
     steps :
-      - uses : actions/checkout@v4d
+      - uses : actions/checkout@v4
       - name : Create Tag
         id : create_tag
         uses : mathieudutour/github-tag-action@v6.2
